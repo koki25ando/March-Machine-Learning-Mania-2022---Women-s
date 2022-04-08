@@ -12,17 +12,19 @@ In short, my agressive/gambling model ended up being the most accurate model thr
 In "passive" model, I submitted predition calculated using LightGBM without any post-processing. 
 In "agressive/gambling" model, I did override predicition of three teams.
 
-[Data Preparation]
+# Data Preparation
+
 I wrote R scripts code to set up datasets. 
 I did no tricky things at all, I setup very basic features such as Seed info, teamid, team information...
 For further complete information, please read my [R codes](https://github.com/koki25ando/March-Machine-Learning-Mania-2022---Women-s/tree/master/R_code) which exist in 'R' folder in this repo.
 
-[Modeling]
+# Modeling
+
 I used only one model, LightGBM. That's it. I didn't even stacked any other models in the end.
 I tried to make it as simple as possible. So I decided use only LightGBM.
 See [this notebook](https://github.com/koki25ando/March-Machine-Learning-Mania-2022---Women-s/blob/master/py/LightGBM_stage2.ipynb) for more information.
 
-[Post-Processing]
+# Post-Processing
 Here comes aggressive/gambling part. Basically i did override 3 teams prediction as every other participants in this competitions do.
 I've read some articles, and chose three teams, "Stanford", "Uconn", "South Carolina".
 In the end, three of them survived until FINAL FOUR. I guess I was just this year's lucky boy.
