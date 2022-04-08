@@ -1,0 +1,56 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(tidyverse)
+train_df <- read_csv(file.path(base_path, "data", "train_df.csv"), col_types = cols(.default = "c"))
+```
+
+```{r}
+Cities <- read_csv(file.path(base_path, "data", "Cities.csv"), col_types = cols(.default = "c"))
+Conferences <- read_csv(file.path(base_path, "data", "Conferences.csv"), col_types = cols(.default = "c"))
+WTeamSpellings <-   read_csv(file.path(base_path, "data", "WTeamSpellings.csv"), col_types = cols(.default = "c"))
+WTeamConferences <- read_csv(file.path(base_path, "data", "WTeamConferences.csv"), col_types = cols(.default = "c"))
+```
+
+
+```{r}
+train_df_01 <- train_df %>% 
+  left_join(WTeamConferences, by = c("Season"="Season", "teamId_01" = "TeamID")) %>% 
+  left_join(WTeamConferences, by = c("Season"="Season", "teamId_02" = "TeamID")) %>% 
+  rename("ConfAbbrev_01"="ConfAbbrev.x",
+         "ConfAbbrev_02"="ConfAbbrev.y") %>% 
+  left_join(Conferences, by = c("ConfAbbrev_01"="ConfAbbrev")) %>% 
+  left_join(Conferences, by = c("ConfAbbrev_02"="ConfAbbrev")) %>% 
+  rename("Description_01"="Description.x",
+         "Description_02"="Description.y")
+names(train_df_01) <- names(train_df_01) %>% 
+  str_replace_all("\\.x", "_01") %>% 
+  str_replace_all("\\.y", "_02")
+```
+
+
+```{r}
+WGameCities <-                read_csv(file.path(base_path, "data", "WGameCities.csv"), col_types = cols(.default = "c"))
+WNCAATourneySeeds <-          read_csv(file.path(base_path, "data", "WNCAATourneySeeds.csv"), col_types = cols(.default = "c"))
+WNCAATourneySlots <-          read_csv(file.path(base_path, "data", "WNCAATourneySlots.csv"), col_types = cols(.default = "c"))
+```
+
+
+```{r}
+train_df_02 <- train_df_01 %>% 
+  left_join(WNCAATourneySeeds, by = c("Season"="Season","teamId_01"="TeamID")) %>% 
+  left_join(WNCAATourneySeeds, by = c("Season"="Season","teamId_02"="TeamID")) %>% 
+  rename("Seed_01"="Seed.x",
+         "Seed_02"="Seed.y")
+write_csv(train_df_02, file.path(base_path, "data", "train_df_02.csv"))
+```
+

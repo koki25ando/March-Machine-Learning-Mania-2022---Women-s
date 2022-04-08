@@ -1,0 +1,52 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(tidyverse)
+sample_sub <- read_csv(file.path(base_path, "data", "WSampleSubmissionStage1.csv"), col_types = cols(.default = "c"))
+train_df_02 <- read_csv(file.path(base_path, "data", "train_df_02.csv"), col_types = cols(.default = "c"))
+dim(sample_sub) # 13
+test_df <- sample_sub %>% 
+  separate(ID, sep = "_", into = c("Season", "teamId_01", "teamId_02"))
+```
+
+```{r}
+test_df <- test_df %>% 
+  left_join(WTeams, by = c("teamId_01"="TeamID")) %>% 
+  left_join(WTeams, by = c("teamId_02"="TeamID")) %>% 
+  left_join(compact_result_01, by = c("Season"="Season",
+                                   "teamId_01"="teamID_01",
+                                   "teamId_02"="teamID_02"))
+names(test_df) <- names(test_df) %>% 
+  str_replace_all("\\.x", "_01") %>% 
+  str_replace_all("\\.y", "_02")
+
+test_df_01 <- test_df %>% 
+  left_join(WTeamConferences, by = c("Season"="Season", "teamId_01" = "TeamID")) %>% 
+  left_join(WTeamConferences, by = c("Season"="Season", "teamId_02" = "TeamID")) %>% 
+  rename("ConfAbbrev_01"="ConfAbbrev.x",
+         "ConfAbbrev_02"="ConfAbbrev.y") %>% 
+  left_join(Conferences, by = c("ConfAbbrev_01"="ConfAbbrev")) %>% 
+  left_join(Conferences, by = c("ConfAbbrev_02"="ConfAbbrev")) %>% 
+  rename("Description_01"="Description.x",
+         "Description_02"="Description.y")
+names(test_df_01) <- names(test_df_01) %>% 
+  str_replace_all("\\.x", "_01") %>% 
+  str_replace_all("\\.y", "_02")
+test_df_02 <- test_df_01 %>% 
+  left_join(WNCAATourneySeeds, by = c("Season"="Season","teamId_01"="TeamID")) %>% 
+  left_join(WNCAATourneySeeds, by = c("Season"="Season","teamId_02"="TeamID")) %>% 
+  rename("Seed_01"="Seed.x",
+         "Seed_02"="Seed.y")
+dim(test_df_02)
+write_csv(test_df_02, file.path(base_path, "data", "test_df_02.csv"))
+```
+

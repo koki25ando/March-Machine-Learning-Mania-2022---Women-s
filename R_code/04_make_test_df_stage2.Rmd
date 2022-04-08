@@ -1,0 +1,96 @@
+---
+title: "Untitled"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+```{r}
+library(tidyverse)
+sample_sub <- read_csv(file.path(base_path, "WDataFiles_Stage2", "WSampleSubmissionStage2.csv"), col_types = cols(.default = "c"))
+train_df_02 <- read_csv(file.path(base_path, "data", "train_df_02.csv"), col_types = cols(.default = "c"))
+dim(sample_sub) # 10080, 2
+dim(train_df_02) # 13
+test_df <- sample_sub %>% 
+  separate(ID, sep = "_", into = c("Season", "teamId_01", "teamId_02"))
+```
+
+```{r}
+WTeams <- read_csv(file.path(base_path, "WDataFiles_Stage2", "WTeams.csv"), col_types = cols(.default = "c"))
+WNCAATourneyCompactResults <- read_csv(file.path(base_path, "WDataFiles_Stage2", "WNCAATourneyCompactResults.csv"), col_types = cols(.default = "c"))
+WRegularSeasonCompactResults <- read_csv(file.path(base_path, "WDataFiles_Stage2", "WRegularSeasonCompactResults.csv"), col_types = cols(.default = "c"))
+WNCAATourneyCompactResults_01 <- WNCAATourneyCompactResults %>% 
+  mutate(WTeamID = as.numeric(WTeamID),
+         LTeamID = as.numeric(LTeamID),
+         teamID_01 = ifelse(WTeamID < LTeamID, WTeamID, LTeamID),
+         teamID_02 = ifelse(WTeamID > LTeamID, WTeamID, LTeamID),
+         target = ifelse(teamID_01 == WTeamID, 1, 0),
+         type = "WNCAATourneyCompactResults") %>% 
+  select(Season, teamID_01, teamID_02, target, type)
+WRegularSeasonCompactResults_01 <- WRegularSeasonCompactResults %>% 
+  mutate(WTeamID = as.numeric(WTeamID),
+         LTeamID = as.numeric(LTeamID),
+         teamID_01 = ifelse(WTeamID < LTeamID, WTeamID, LTeamID),
+         teamID_02 = ifelse(WTeamID > LTeamID, WTeamID, LTeamID),
+         target = ifelse(teamID_01 == WTeamID, 1, 0),
+         type = "WRegularSeasonCompactResults") %>% 
+  select(Season, teamID_01, teamID_02, target, type)
+
+
+compact_result <- WNCAATourneyCompactResults_01 %>% 
+  bind_rows(WRegularSeasonCompactResults_01) %>% 
+  mutate(teamID_01 = as.character(teamID_01),
+         teamID_02 = as.character(teamID_02)) %>% 
+  unique()
+compact_result_01 <- compact_result %>% 
+  group_by(Season, teamID_01, teamID_02) %>% 
+  summarise(target = mean(target),
+            .groups = "drop")
+
+test_df <- test_df %>% 
+  left_join(WTeams, by = c("teamId_01"="TeamID")) %>% 
+  left_join(WTeams, by = c("teamId_02"="TeamID")) %>% 
+  left_join(compact_result_01, by = c("Season"="Season",
+                                   "teamId_01"="teamID_01",
+                                   "teamId_02"="teamID_02"))
+names(test_df) <- names(test_df) %>% 
+  str_replace_all("\\.x", "_01") %>% 
+  str_replace_all("\\.y", "_02")
+
+
+
+Cities <- read_csv(file.path(base_path, "WDataFiles_Stage2", "Cities.csv"), col_types = cols(.default = "c"))
+Conferences <- read_csv(file.path(base_path, "WDataFiles_Stage2", "Conferences.csv"), col_types = cols(.default = "c"))
+WTeamSpellings <-   read_csv(file.path(base_path, "WDataFiles_Stage2", "WTeamSpellings.csv"), col_types = cols(.default = "c"))
+WTeamConferences <- read_csv(file.path(base_path, "WDataFiles_Stage2", "WTeamConferences.csv"), col_types = cols(.default = "c"))
+
+test_df_01 <- test_df %>% 
+  left_join(WTeamConferences, by = c("Season"="Season", "teamId_01" = "TeamID")) %>% 
+  left_join(WTeamConferences, by = c("Season"="Season", "teamId_02" = "TeamID")) %>% 
+  rename("ConfAbbrev_01"="ConfAbbrev.x",
+         "ConfAbbrev_02"="ConfAbbrev.y") %>% 
+  left_join(Conferences, by = c("ConfAbbrev_01"="ConfAbbrev")) %>% 
+  left_join(Conferences, by = c("ConfAbbrev_02"="ConfAbbrev")) %>% 
+  rename("Description_01"="Description.x",
+         "Description_02"="Description.y")
+names(test_df_01) <- names(test_df_01) %>% 
+  str_replace_all("\\.x", "_01") %>% 
+  str_replace_all("\\.y", "_02")
+
+
+
+WNCAATourneySeeds <-          read_csv(file.path(base_path, "WDataFiles_Stage2", "WNCAATourneySeeds.csv"), col_types = cols(.default = "c"))
+
+test_df_02 <- test_df_01 %>% 
+  left_join(WNCAATourneySeeds, by = c("Season"="Season","teamId_01"="TeamID")) %>% 
+  left_join(WNCAATourneySeeds, by = c("Season"="Season","teamId_02"="TeamID")) %>% 
+  rename("Seed_01"="Seed.x",
+         "Seed_02"="Seed.y")
+dim(test_df_02)
+write_csv(test_df_02, file.path(base_path, "data", "test_df_staget2.csv"))
+```
+
