@@ -18,6 +18,11 @@ I wrote R scripts to set up datasets.
 I did no tricky things at all, I setup very basic features such as Seed info, teamid, team information...
 For further complete information, please read my [R codes](https://github.com/koki25ando/March-Machine-Learning-Mania-2022---Women-s/tree/master/R_code) which exist in 'R' folder in this repo.
 
+# Feature Engineering
+
+To improve my cross validation score, I did very basic categorical feature engineering, such as count encoding, label encoding, target encoding...
+See [this code](https://github.com/koki25ando/March-Machine-Learning-Mania-2022---Women-s/blob/master/py/LightGBM_stage2.ipynb) to check what's being done. 
+
 # Modeling
 
 I used only one model, LightGBM. That's it. I didn't even stacked any other models in the end.
